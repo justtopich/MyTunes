@@ -1,0 +1,32 @@
+[tool.poetry]
+name = "mytunes"
+version = "0.1.0"
+description = "Synс & convert music library with directories"
+authors = ["Alex Whiteeyes <justtopich@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+pydantic = "^2.5.1"
+loguru = "^0.7.2"
+music-tag = "^0.4.3"
+pytest = "^7.4.3"
+
+
+[project.urls]
+Repository = "https://github.com/justtopich/mytunes"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+
+test = [
+  "coveralls",
+  "pytest >=5.4.0",
+  "pytest-black",
+  "pytest-cov >=2.7.0",
+  "pytest-datadir",
+  "pytest-mypy",
+]
