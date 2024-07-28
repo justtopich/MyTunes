@@ -3,9 +3,10 @@ import os
 import shutil
 from typing import Set
 
-from my_tunes.config import version, cfg, log, KNOWN_FORMAT, LOSSLESS_FORMAT
-from my_tunes.service.converter import Converter
-from my_tunes.service.util import create_dirs
+from myTunes import __version__
+from config import cfg, log, KNOWN_FORMAT, LOSSLESS_FORMAT
+from service.converter import Converter
+from service.util import create_dirs
 
 
 class Stat:
@@ -25,12 +26,15 @@ class Stat:
 
 
 def convert_library():
-    log.info(version)
+    log.info(__version__)
     converter = Converter()
     stat = Stat()
     
     log.info(f'scan library {cfg.library.rootPath}')
     for file in glob.iglob(f'{cfg.library.rootPath}/**/*', recursive=True):
+        if file.startswith(cfg.library.syncPath):
+            continue
+
         if os.path.isfile(file):
             ext = file[file.rfind('.') + 1:].lower()
             if ext not in KNOWN_FORMAT:
@@ -39,7 +43,7 @@ def convert_library():
             
             dirOut = os.path.dirname(file)
             dirOut = dirOut.replace(cfg.library.rootPath, cfg.library.syncPath)
-            
+
             try:
                 create_dirs((dirOut,))
             except Exception as e:
@@ -58,7 +62,7 @@ def convert_library():
                 
                 if not os.path.isfile(fileOut):
                     log.info(f'convert {file} -> {fileOut}')
-                    if converter.convert(converter.qaac, file, fileOut):
+                    if converter.convert_file(converter.qaac, file, fileOut):
                         stat.done += 1
                     else:
                         stat.error += 1
@@ -79,4 +83,3 @@ def convert_library():
 
 if __name__ == '__main__':
     convert_library()
-    

@@ -1,8 +1,10 @@
 **/__pycache__
+**/tmp
+**/log
 **/*.log
 .idea/
-my_tunes/tmp
-my_tunes/qaac/*
+bin/
+myTunes/qaac/*
 tests/.pytest_cache
 tests/tmp
 tests/log

@@ -8,7 +8,7 @@ import pytest
 import music_tag
 from music_tag.file import AudioFile, MetadataItem, Artwork, TAG_MAP_ENTRY
 
-from my_tunes.service.util import create_dirs
+from myTunes.service.util import create_dirs
 
 
 TESTPATH = os.path.dirname(os.path.abspath(__file__))
@@ -25,10 +25,10 @@ outFiles: List[str] = []
 def setup():
     create_dirs(DATAPATH)
     
-    print(f'\ncopy {TESTPATH}/../my_tunes/settings.ini')
+    print(f'\ncopy {TESTPATH}/../myTunes/settings.ini')
     config = configparser.ConfigParser()
-    config.read(f'{TESTPATH}/../my_tunes/settings.ini')
-    config.set('converter', 'qaac', '..\my_tunes\qaac\qaac64.exe')
+    config.read(f'{TESTPATH}/../myTunes/settings.ini')
+    config.set('converter', 'qaac', '..\myTunes\qaac\qaac64.exe')
     # config.set('logger', 'level', 'debug')
     
     with open(f'{TESTPATH}/settings.ini', 'w') as f:
@@ -38,7 +38,7 @@ def setup():
     shutil.copyfile(f'{TESTPATH}/{TESTFILE}', f'{TESTPATH}/in/{TESTFILE}')
     
     print('\nTest config')
-    from my_tunes.config import cfg
+    from myTunes.config import cfg
     
     cfg.library.rootPath = DATAPATH[0]
     cfg.library.syncPath = DATAPATH[1]
@@ -61,13 +61,13 @@ def configure():
        
 def test_ffmpeg():
     print('\nLoad ffmpeg')
-    from my_tunes.service.ffmpeg import FFmpeg
+    from myTunes.service.ffmpeg import FFmpeg
     ffmpeg = FFmpeg()
     assert isinstance(ffmpeg, FFmpeg), "Load FFmpeg encoder"
     
     print('Create music library')
     
-    from my_tunes.config import KNOWN_FORMAT
+    from myTunes.config import KNOWN_FORMAT
     
     fileIn = f'{DATAPATH[0]}/{TESTFILE}'
     testPaths = ('', '/мёд 玲/','/мёд 玲/22/')
@@ -94,7 +94,7 @@ def test_ffmpeg():
 
 def test_converter_m4a():
     print()
-    from my_tunes.start import convert_library, LOSSLESS_FORMAT
+    from myTunes.start import convert_library, LOSSLESS_FORMAT
 
     convert_library()
 

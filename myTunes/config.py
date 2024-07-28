@@ -7,14 +7,14 @@ import sys
 import loguru
 from loguru import logger as log
 
-from my_tunes.service.util import create_dirs
+from myTunes.service.util import create_dirs
 
 
-__all__ = ('version', 'cfg', 'log', 'KNOWN_FORMAT', 'LOSSLESS_FORMAT', 'ROOT_DIR')
+__all__ = ('cfg', 'log', 'KNOWN_FORMAT', 'LOSSLESS_FORMAT', 'ROOT_DIR')
 
 
 LOSSLESS_FORMAT = set('wav,flac,aiff,ape'.split(','))
-KNOWN_FORMAT = set('aac,m4a,mp3,ogg,mp4,wma,opus,m3u,m4r,mp2'.split(',')).union(LOSSLESS_FORMAT)
+KNOWN_FORMAT = set('aac,m4a,mp3,ogg,mp4,wma,opus,m4r,mp2'.split(',')).union(LOSSLESS_FORMAT)
 ROOT_DIR = pathlib.Path(__file__).parent.parent
 sys.path.append(os.path.join(os.getcwd(), ".."))
 
@@ -100,7 +100,6 @@ class Settings:
     
 
 if __name__ != '__main__':
-    version = get_version("__init__.py")
     cfg = Settings('settings.ini')
     
     cfg.logger.level = cfg.logger.level.upper()
@@ -112,7 +111,8 @@ if __name__ != '__main__':
 
     # logging settings
     log.remove()
-    log.add(sys.stdout, level=cfg.logger.level, format='{time:YYYY-MM-DD HH:mm:ss} {level} {message}')
+    if sys.stdout is not None:
+        log.add(sys.stdout, level=cfg.logger.level, format='{time:YYYY-MM-DD HH:mm:ss} {level} {message}')
     log.add(
         f'{ROOT_DIR}/logs/MyTunes.log',
         level=cfg.logger.level,

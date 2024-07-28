@@ -1,7 +1,7 @@
 import os
 import re
 
-import my_tunes
+import myTunes
 
 
 TESTPATH = os.path.dirname(os.path.abspath(__file__))
@@ -23,5 +23,5 @@ def test_version_consistency():
         else:
             raise ValueError("No version information found in the CHANGES file")
     assert (
-        my_tunes.__version__.startswith(version_changelog)
-    ), f"Version module({my_tunes.__version__}) - CHANGES.MD do not match({version_changelog})"
+        myTunes.__version__.startswith(version_changelog)
+    ), f"Version module({myTunes.__version__}) - CHANGES.MD do not match({version_changelog})"
