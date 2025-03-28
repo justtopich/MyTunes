@@ -37,7 +37,7 @@ class Hanlder(QThread):
     
     def run(self):
         log.info(f"handler {self.name}: ready")
-        
+
         while True:
             task: ConverterTask = self.tasks.get()
             if task == '--stop--':
@@ -106,8 +106,8 @@ class Hanlder(QThread):
             finally:
                 self.tasks.task_done()
         
-    def log_item(self, msg: str, color='white'):
+    def log_item(self, msg: str, color: str = 'transparent'):
         item = QListWidgetItem(msg)
-        item.setBackground(QColor(self.colors[color]))
-        # item.setForeground(QColor(0))
+
+        item.setBackground(QColor(self.colors.get(color, 'transparent')))
         self.logPage.insertItem(0, item)

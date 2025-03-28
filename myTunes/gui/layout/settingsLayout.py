@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import QVBoxLayout, QComboBox, QLabel, QHBoxLayout, QDialog
     QLineEdit, QFileDialog
 from music_tag import AudioFile
 
+from config import cfg
 from service.tagEditor import TAGS
 from service.converterTask import ConverterTask
 from service.qThreadTarget import QThreadTarget
@@ -203,6 +204,10 @@ class SettingsLayout(QVBoxLayout):
     def start(self) -> None:
         paramMap = self._activeEncoder.settings.guiSettings
         settings: Dict[str, any] = {}
+
+        # update exe settings
+        self._converter.ffmpeg.exe = cfg.ffmpeg
+        self._converter.qaac.exe = cfg.qaac
 
         for param in self._parameters:
             if isinstance(param, QCheckBox):

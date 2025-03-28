@@ -1,5 +1,6 @@
 import os
-from subprocess import Popen, PIPE, DEVNULL
+from subprocess import Popen, PIPE, DEVNULL, check_output, STDOUT
+from sys import stdout
 from typing import Tuple, Dict, Iterator
 
 from .encoder import Encoder, Settings
@@ -16,6 +17,7 @@ CODEC_FORMAT = {
 ls = []
 for i in CODEC_FORMAT.values():
     ls.extend(i)
+
 
 class SettingsFF(Settings):
     def __init__(self, bitrate=320, mode='cbr', he=False, frequency='auto', quality=2):
@@ -178,40 +180,38 @@ class FFmpeg(Encoder):
         
         duration2 = 0
         cmd = (f'{self.exe} -i "{fileIn}" -hide_banner -nostats -y -disposition:v -attached_pic -vn -progress - '
-               f'{paramsStr} "{fileOut}" ')
+               f'{paramsStr} "{fileOut}"')
         log.debug(cmd)
         
         # stderr return info; stdout return progres
         error = ''
-        with Popen(cmd, shell=True, encoding='cp866', stdout=PIPE, stderr=PIPE, stdin=DEVNULL) as proc:
-            done = 0
-            for line in proc.stdout:
-                log.debug(line)
-                line = line.strip()
-                
-                if line.startswith('out_time='):
-                    duration2 = self._parse_duration(line[9:line.find('.')])
-                elif line.startswith('progress='):
-                    if line.endswith('end'):
-                        done = 100
-                        break
-                
-                if done < 100 and duration:
-                    done = int((100/duration) * duration2)
-                
-                yield done
-            
-            for line in proc.stderr:
-                line = line.strip()
 
-                if not line:
-                    break
-                elif 'Error' in line:
-                    log.error(f'{line}')
-                    error += f'\n{line}'
-            
-            if error:
-                log.error(f'ffmpeg: {error}')
-            
-            if not os.path.isfile(fileOut):
-                raise FileNotFoundError('No result file')
+        with Popen(cmd, shell=False, encoding='cp866',
+                   stdout=PIPE, stderr=STDOUT, stdin=DEVNULL,
+                   universal_newlines=True,
+                   ) as proc:
+
+            while proc.poll() is None:
+                done = 0
+
+                for line in proc.stdout:
+                    if line.startswith('out_time='):
+                        duration2 = self._parse_duration(line[9:line.find('.')])
+                    elif line.startswith('progress='):
+                        if line.endswith('end'):
+                            done = 100
+                            break
+                    elif 'Error' in line:
+                        log.error(f'{line}')
+                        error += f'\n{line}'
+
+                    if done < 100 and duration:
+                        done = int((100/duration) * duration2)
+
+                    yield done
+
+                if error:
+                    log.error(f'ffmpeg: {error}')
+
+                if not os.path.isfile(fileOut):
+                    raise FileNotFoundError('No result file')

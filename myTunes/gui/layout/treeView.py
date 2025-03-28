@@ -181,10 +181,9 @@ class TreeView(QTreeView):
                                 QStandardItem(os.path.basename(uFile))
                             ))
                             parents[uFile] = parent.child(parent.rowCount() - 1)
-    
-                            for uFile in glob.iglob(f'{url.toLocalFile()}/**/*', recursive=True):
-                                if uFile.startswith(cfg.library.syncPath):
-                                    continue
+
+                            for uFile in glob.iglob(f'{glob.escape(url.toLocalFile())}/**/*', recursive=True):
+                                uFile = uFile.replace('\\', '/', -1)
                                 
                                 if os.path.isfile(uFile):
                                     if not self.pass_file(uFile):

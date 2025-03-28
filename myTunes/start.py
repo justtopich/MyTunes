@@ -32,9 +32,6 @@ def convert_library():
     
     log.info(f'scan library {cfg.library.rootPath}')
     for file in glob.iglob(f'{cfg.library.rootPath}/**/*', recursive=True):
-        if file.startswith(cfg.library.syncPath):
-            continue
-
         if os.path.isfile(file):
             ext = file[file.rfind('.') + 1:].lower()
             if ext not in KNOWN_FORMAT:

@@ -58,12 +58,6 @@ def lowcase_sections(parser: configparser.RawConfigParser) -> configparser.RawCo
     return parser
 
 
-# settings
-class Library:
-    rootPath: str
-    syncPath: str
-
-
 class Logger:
     level: str
     maxMb: int
@@ -71,41 +65,44 @@ class Logger:
 
 class Settings:
     logger: Logger
-    library: Library
     tempPath: str
     ffmpeg: str
     qaac: str
+    threads: int
 
     def __init__(self, inifile: str):
-        config = configparser.RawConfigParser(allow_no_value=True)
-        config = lowcase_sections(config)
+        self.config = configparser.RawConfigParser(allow_no_value=True)
+        self.config = lowcase_sections(self.config)
+        self.threads = 4
         
         try:
-            config.read(inifile)
+            self.config.read(inifile)
         except Exception as e:
             print(f"Fail to read configuration file: {e}")
             raise SystemExit(1)
         
         self.logger = Logger()
-        self.logger.level = config.get('logger', 'level')
-        self.logger.maxMb = config.getint('logger', 'max_mb')
-        
-        self.library = Library()
-        self.library.rootPath = config.get('library', 'root_path')
-        self.library.syncPath = config.get('library', 'sync_path')
-        
-        self.tempPath = config.get('converter', 'temp_path')
-        self.ffmpeg = config.get('converter', 'ffmpeg')
-        self.qaac = config.get('converter', 'qaac')
-    
+        self.logger.level = self.config.get('logger', 'level')
+        self.logger.maxMb = self.config.getint('logger', 'max_mb')
+
+        self.tempPath = self.config.get('converter', 'temp_path')
+        self.ffmpeg = self.config.get('converter', 'ffmpeg')
+        self.qaac = self.config.get('converter', 'qaac')
+        self.threads = self.config.getint('converter', 'threads')
+
+    def save(self):
+        self.config.set('converter', 'ffmpeg', self.ffmpeg)
+        self.config.set('converter', 'qaac', self.qaac)
+        self.config.set('converter', 'threads', str(self.threads))
+        with open('settings.ini', 'w') as f:
+            self.config.write(f)
+
 
 if __name__ != '__main__':
     cfg = Settings('settings.ini')
     
     cfg.logger.level = cfg.logger.level.upper()
     cfg.tempPath = os.path.normpath(cfg.tempPath)
-    cfg.library.syncPath = os.path.normpath(cfg.library.syncPath)
-    cfg.library.rootPath = os.path.normpath(cfg.library.rootPath.replace('\\', '/', -1))
 
     create_dirs(('tmp', 'logs',))
 

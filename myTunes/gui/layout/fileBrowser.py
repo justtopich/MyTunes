@@ -3,9 +3,9 @@ from PyQt6.QtGui import QFileSystemModel
 from PyQt6.QtWidgets import QGroupBox, QTreeView, QListView, QHBoxLayout, QSpacerItem, QSizePolicy
 
 
-class FileBroser(QGroupBox):
+class FileBrowser(QGroupBox):
     def __init__(self):
-        super(FileBroser, self).__init__('Choose files')
+        super(FileBrowser, self).__init__('Choose files')
         self.treeview = QTreeView()
         self.listview = QListView()
         # self.treeview.setHeaderHidden(True)
@@ -18,25 +18,31 @@ class FileBroser(QGroupBox):
         fileChooser.addSpacerItem(QSpacerItem(2, 2, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum))
         fileChooser.addWidget(self.listview)
 
-        path = QDir.rootPath()
         self.dirModel = QFileSystemModel()
-        self.dirModel.setRootPath(path)
+        self.dirModel.setRootPath('/')
         self.dirModel.setFilter(QDir.Filter.NoDotAndDotDot | QDir.Filter.AllDirs)
 
         self.fileModel = QFileSystemModel()
         self.fileModel.setFilter(QDir.Filter.NoDotAndDotDot | QDir.Filter.Files | QDir.Filter.AllDirs)
 
+        self.treeview.setDragEnabled(True)
+        self.listview.setDragEnabled(True)
+        self.treeview.setAnimated(True)
         self.treeview.setModel(self.dirModel)
         self.listview.setModel(self.fileModel)
 
-        self.treeview.setRootIndex(self.dirModel.index(path))
-        self.listview.setRootIndex(self.fileModel.index(path))
-        self.listview.setDragEnabled(True)
+        self.treeview.setRootIndex(self.fileModel.index(''))
+        self.listview.setRootIndex(self.fileModel.index(QDir.rootPath()))
         self.listview.setMinimumWidth(self.width())
+
+        self.treeview.setColumnWidth(0, 350)
+        for i in range(1, self.dirModel.columnCount()):
+            self.treeview.hideColumn(i)
 
         self.treeview.clicked.connect(self.on_clicked)
 
         self.setLayout(fileChooser)
+
 
     def on_clicked(self, index):
         path = self.dirModel.fileInfo(index).absoluteFilePath()

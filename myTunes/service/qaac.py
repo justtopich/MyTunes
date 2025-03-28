@@ -57,7 +57,7 @@ class SettingsQaac(Settings):
         self.verify()
 
         s = f"--{self.mode} {self.bitrate} --ignorelength -n --text-codepage 65001 -q {self.q} --rate {self.rate} "
-        if self.he: s += "-- he "
+        if self.he: s += "--he "
         return s
 
     def verify(self) -> None:
