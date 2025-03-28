@@ -3,14 +3,14 @@ from queue import Queue
 from typing import List, Dict, Tuple
 
 from PyQt6.QtCore import Qt, QThread
+from PyQt6.QtGui import QPalette
 from PyQt6.QtWidgets import QWidget, QHBoxLayout, QDialogButtonBox, QVBoxLayout, QLabel, \
-    QListWidget, QProgressBar, QScrollBar, QScrollArea
+    QListWidget, QProgressBar, QScrollBar, QScrollArea, QListWidgetItem
 
-from config import log
+from config import log, cfg
 from service.converter import Converter
 from service.converterTask import ConverterTask
 from service.handler import Hanlder
-
 
 
 class ProcessWindow(QWidget):
@@ -32,6 +32,7 @@ class ProcessWindow(QWidget):
         self.logPage = QListWidget()
         self.logPage.setHorizontalScrollBar(QScrollBar(Qt.Orientation.Horizontal))
         self.logPage.setHorizontalScrollBar(QScrollBar(Qt.Orientation.Vertical))
+
         layout.addWidget(self.logPage)
         # layout.addLayout(group)
         
@@ -48,7 +49,6 @@ class ProcessWindow(QWidget):
         
         self.progressBar: Dict[int, QProgressBar] = {}
         self.progressName: Dict[int, QLabel] = {}
-        self.threads = 4
         self.converter = converter
         self.queue: Queue[ConverterTask | str] = Queue()
         self.handlers: Dict[int, QThread] = {}
@@ -70,7 +70,7 @@ class ProcessWindow(QWidget):
             else:
                 log.info(f'cancel: {task.afile.filename}')
                 self.logPage.insertItem(0, f'Cancel: {task.fileOut}')
-        
+
     def close(self):
         if self.allDone:
             self.destroy()
@@ -86,7 +86,7 @@ class ProcessWindow(QWidget):
         self.progressBar.clear()
         self.progressName.clear()
         
-        for i in range(self.threads):
+        for i in range(cfg.threads):
             self.progressName[i] = QLabel('')
             self.progressGroup.addWidget(self.progressName[i])
             self.progressBar[i] = QProgressBar()
@@ -105,7 +105,7 @@ class ProcessWindow(QWidget):
         if outPath and outPath[-1] not in ('/', '\\'):
             outPath += '/'
         
-        for i in range(self.threads):
+        for i in range(cfg.threads):
             th = Hanlder(i, self.queue, self.progressName[i], self.logPage, self.converter,
                          outPath, self.replaceOutfile)
             th.setProgress.connect(self.set_progress)
@@ -115,7 +115,7 @@ class ProcessWindow(QWidget):
         for i in files:
             self.queue.put(i)
         
-        for i in range(self.threads):
+        for i in range(cfg.threads):
             self.queue.put('--stop--')
         
         while not self.queue.empty():

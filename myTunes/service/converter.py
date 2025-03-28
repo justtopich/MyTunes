@@ -25,7 +25,6 @@ class Converter:
             'QAAC': self.qaac,
             'FFmpeg': self.ffmpeg
         }
-        self.threads = 1
         self.queue: Queue[ConverterTask | str] = Queue()
         self.handlers: Dict[int, Thread] = {}
         # self.task: Dict[int, ibt=] = {}

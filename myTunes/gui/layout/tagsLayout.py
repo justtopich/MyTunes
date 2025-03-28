@@ -3,6 +3,8 @@ from typing import Dict, List
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap, QMouseEvent, QResizeEvent
 from PyQt6.QtWidgets import QLabel, QLineEdit, QGridLayout, QFileDialog
+from music_tag import Artwork
+from mutagen.id3 import APIC
 
 from gui.layout.popup import ErrorBox
 from myTunes.service.tagEditor import AudioFile, TAGS, Tag
@@ -117,6 +119,28 @@ class TagsLayout(QGridLayout):
         # self.addWidget(getattr(self, name), index, 1+col)
         self.addWidget(self.tags[tag.name], row, col+1)
 
+    def load_cover(self, afile: AudioFile, afileId: int) -> None:
+        cover: bytes = self.cover.defaultImg
+
+        try:
+            apic: Artwork = afile['artwork'].first
+            cover = apic.data
+        except Exception as e:
+            log.warning(f'load cover (1/2) for {afile.filename}: {e}')
+
+        if cover is self.cover.defaultImg and 'APIC:' in afile.mfile.tags:
+            try:
+                apic: APIC = afile.mfile.tags['APIC:']
+            except Exception as e:
+                log.error(f'load cover (2/2) for {afile.filename}: {e}')
+                ErrorBox(f"Can't load cover",
+                         str(e)
+                         ).exec()
+            else:
+                cover = apic.data
+
+        self.cover.set_image(cover, afileId)
+
     def update_state(self, afiles: List[AudioFile] = None, afilesId: List[int] = None) -> None:
         if not afiles:
             self.tags['afileId'].setText('')
@@ -139,20 +163,8 @@ class TagsLayout(QGridLayout):
                 self.tags[tag.name].setText('')
             else:
                 self.tags[tag.name].setText(str(val))
-        
-        try:
-            cover = afile['artwork'].first
-        except Exception as e:
-            cover = None
-            log.error(f'load cover for {afile.filename}: {e}')
-            ErrorBox(f"Can't load cover",
-                    str(e)
-                ).exec()
 
-        if cover is not None:
-            cover = cover.data
-
-        self.cover.set_image(cover, afileId)
+        self.load_cover(afile, afileId)
 
     def lock_tags(self):
         for tag in TAGS:

@@ -10,10 +10,10 @@ python = ">=3.9,<3.13"
 pydantic = "^2.5.1"
 loguru = "^0.7.2"
 music-tag = "^0.4.3"
-pytest = { version = "^7.4.3", optional = true }
+pytest = { version = "^7.4.4", optional = true }
 pydantic-settings = "^2.0.3"
-pyqt6 = "^6.7.0"
-pillow = "^10.4.0"
+pyqt6 = "^6.8.1"
+pillow = "^11.1.0"
 
 [tool.poetry.group.pyinstaller]
 optional = true

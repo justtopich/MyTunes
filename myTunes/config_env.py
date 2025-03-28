@@ -29,14 +29,7 @@ def to_snake_case(string: str) -> str:
     if string.isupper():
         return string
     else:
-        return (''.join(['_' + i.lower() if i.isupper() else i for i in string]).lstrip('_'))
-
-
-class Library(BaseModel):
-    rootPath: str
-    
-    class Config:
-        alias_generator = to_snake_case
+        return ''.join(['_' + i.lower() if i.isupper() else i for i in string]).lstrip('_')
 
 
 class Logger(BaseModel):
@@ -49,8 +42,6 @@ class Logger(BaseModel):
         
 class Settings(BaseSettings):
     logger: Logger
-    library: Library
-    syncPath: str
     tempPath: str
     ffmpeg: str
     qaac: str
@@ -65,13 +56,9 @@ cfg = Settings()
 
 assert cfg.ffmpeg != "", ValueError("Empty ffmpeg parameter")
 assert cfg.qaac != "", ValueError("Empty qaac parameter")
-assert cfg.syncPath != "", ValueError("Empty syncPath parameter")
-assert cfg.library.rootPath != "", ValueError("Empty library rootPath parameter")
 
 cfg.logger.level = cfg.logger.level.upper()
 cfg.tempPath = os.path.normpath(cfg.tempPath)
-cfg.syncPath = os.path.normpath(cfg.syncPath)
-cfg.library.rootPath = os.path.normpath(cfg.library.rootPath.replace('\\', '/', -1))
 
 # logging settings
 log.remove()

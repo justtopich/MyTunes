@@ -10,7 +10,7 @@ Can use Apple AAC encoder instead of FDK AAC for the better quality. For another
 
 Base feature:
 
-* mass tags edit files rename
+* mass tags edit and files rename
 * convert only lossless format, others copy to destination
 * save directory structure
 
@@ -52,10 +52,6 @@ Settings are stored in **settings.ini**
 
 - level - see python logging level
 - max_mb - max size for log file before he will be zipped
-
-### library
-- root_path - source directory
-- sync_path - destination directory wich files will ve copied/converted
 
 
 ### converter

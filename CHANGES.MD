@@ -1,5 +1,24 @@
 # Changelog
 
+## 2.1.0-beta
+### Features
+* add menu bar and settings
+* add cpu threads settings
+
+### Improvements
+* add drag'n'drop from folders chooser
+* listing drives in folders chooser
+
+### Fixed
+* in dark mode in processing window light text appears on light background
+* some jpeg pictures can't read in mp3 files
+* files with characters `[]` in names not see and not adding to converter
+* processing can freezing with small files. ffmpeg stdout put to stderr
+
+### Deprecated
+* remove all library settings
+
+
 ## 2.0.0-beta
 
 ### Features

@@ -43,7 +43,12 @@ class MetadataItemPatch(MetadataItem):
                     v = v[:find.start()]
             
             if self.sanitizer is not None:
-                v = self.sanitizer(v)
+                try:
+                    v = self.sanitizer(v)
+                except ValueError as e:
+                    print(e)
+                    v = None
+
             if not (self.type is None or v is None or isinstance(v, self.type) or v == ''):
                     v = self.type(v)
                     
