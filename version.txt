@@ -21,7 +21,7 @@ VSVersionInfo(
         StringStruct(u'LegalCopyright', u'jusTTopich'),
         StringStruct(u'OriginalFilename', u'MyTunes.exe'),
         StringStruct(u'ProductName', u'MyTunes'),
-        StringStruct(u'ProductVersion', u'2.0.0.0')])
+        StringStruct(u'ProductVersion', u'2.1.0.0')])
     ]), 
     VarFileInfo([VarStruct(u'Translation', [1049, 1200])])
   ]

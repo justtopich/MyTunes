@@ -1,6 +1,5 @@
 import os
-from subprocess import Popen, PIPE, DEVNULL, check_output, STDOUT
-from sys import stdout
+from subprocess import Popen, PIPE, DEVNULL, STDOUT
 from typing import Tuple, Dict, Iterator
 
 from .encoder import Encoder, Settings
@@ -186,7 +185,7 @@ class FFmpeg(Encoder):
         # stderr return info; stdout return progres
         error = ''
 
-        with Popen(cmd, shell=False, encoding='cp866',
+        with Popen(cmd, shell=True, encoding='cp866',
                    stdout=PIPE, stderr=STDOUT, stdin=DEVNULL,
                    universal_newlines=True,
                    ) as proc:

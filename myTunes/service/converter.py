@@ -17,7 +17,7 @@ class Converter:
         try:
             self.qaac = Qaac()
         except Exception as e:
-            log.error(f'load QAAC encoder: {e}')
+            raise ImportError(f'load QAAC encoder: {e}')
         
         self.tagEditor = TagEditor()
         self.ffmpeg = FFmpeg()

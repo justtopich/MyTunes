@@ -1,6 +1,14 @@
 # Changelog
 
 ## 2.1.0-beta
+### Fixed
+* calling ffmpeg with external console
+
+### Features
+* building with poetry
+
+
+## 2.1.0-beta
 ### Features
 * add menu bar and settings
 * add cpu threads settings

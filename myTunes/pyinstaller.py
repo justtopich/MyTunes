@@ -1,12 +1,12 @@
-import shutil
-from time import sleep
 import os
+import shutil
+from pathlib import Path
 
 
 PACKAGE = "MyTunes"
 
 
-def make():
+def install():
     try:
         with open(f'myTunes/__init__.py', 'r') as file:
             for line in file.readlines():
@@ -43,11 +43,5 @@ def make():
         os.system(f"pyinstaller --clean --workpath myTunes --distpath bin {PACKAGE}.spec")
     except Exception as e:
         input("can't call pyinstaller: %s" % e)
-        return
-    
+
     shutil.rmtree('myTunes/MyTunes')
-
-
-make()
-print('Done!')
-sleep(2)

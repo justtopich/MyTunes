@@ -10,8 +10,8 @@ python = ">=3.9,<3.13"
 pydantic = "^2.5.1"
 loguru = "^0.7.2"
 music-tag = "^0.4.3"
-pytest = { version = "^7.4.4", optional = true }
-pydantic-settings = "^2.0.3"
+pytest = { version = "^8.3.5", optional = true }
+pydantic-settings = "^2.8.1"
 pyqt6 = "^6.8.1"
 pillow = "^11.1.0"
 
@@ -20,6 +20,9 @@ optional = true
 
 [tool.poetry.group.pyinstaller.dependencies]
 pyinstaller = "^6.9.0"
+
+[tool.poetry.scripts]
+build = "myTunes.pyinstaller:install"
 
 [project.urls]
 Repository = "https://github.com/justtopich/mytunes"

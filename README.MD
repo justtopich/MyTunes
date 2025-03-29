@@ -43,7 +43,6 @@ myTunes
 ```
 
 
-
 ## Configuration
 
 Settings are stored in **settings.ini**
@@ -59,3 +58,16 @@ Settings are stored in **settings.ini**
 - ffmpeg - destination to executable ffmpeg
 - qaac - destination to executable qaac
 
+
+## Building
+
+``
+poetry install --with pyinstaller
+poetry run build
+``
+
+Your exe file will be in MyTunes/bin. Copy files to bin folder:
+* settings.ini
+* resource folder
+
+Configure **settings.ini**
