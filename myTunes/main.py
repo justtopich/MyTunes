@@ -1,9 +1,10 @@
+import faulthandler
+from typing import Set
 import sys
 if sys.platform == "win32":
     import ctypes
     ctypes.windll.kernel32.SetDllDirectoryA(None)
 
-from typing import Set
 
 from config import log
 from myTunes import __version__
@@ -28,9 +29,12 @@ class Stat:
 
 
 if __name__ == '__main__':
+    # faulthandler.enable()
+
     log.info(f'MyTunes {__version__}')
     converter = Converter()
     stat = Stat()
     guiApp, guiMainWindow = create_gui(converter)
     guiMainWindow.show()
+
     guiApp.exec()

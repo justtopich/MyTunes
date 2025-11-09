@@ -2,12 +2,14 @@ from typing import Iterable
 import traceback
 import re
 
-
 import music_tag
 from music_tag.file import AudioFile, MetadataItem, Artwork, TAG_MAP_ENTRY
 from mutagen.mp4 import MP4Cover
 from myTunes.config import log
-from .util import parse_date
+from .util import parse_date, convert_to_jpeg
+from myTunes.model.settings import CoverSettings
+from .afileState import AfileState, Acover
+
 
 __all__ = ('Tag', 'TAGS', 'TagEditor', 'AudioFile')
 
@@ -86,6 +88,7 @@ class TagEditor:
     def __init__(self):
         self._editor = music_tag
         self._patch_music_tag()
+        self.coverSettings = CoverSettings
     
     def load_file(self, file: str) -> AudioFile:
         return self._editor.load_file(file)
@@ -104,6 +107,11 @@ class TagEditor:
                 if k == 'artwork':
                     if metadata[k].first is not None:
                         value: bytes = metadata[k].first.data
+                        # if self.coverSettings.convert:
+                        #     value = convert_to_jpeg(
+                        #         metadata[k].first.data,
+                        #         progressive=self.coverSettings.jpegNext,
+                        #         quality=self.coverSettings.quality)
                     else:
                         continue
                 else:

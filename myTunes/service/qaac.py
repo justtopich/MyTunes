@@ -141,7 +141,7 @@ class Qaac(Encoder):
                     line += char
                     continue
 
-                # log.debug(line)
+                # log.debug(f'QAAC: {line}')
                 if line.startswith('['):
                     done = int(float(line[1:line.find('%')]))
                     yield done

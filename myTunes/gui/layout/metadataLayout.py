@@ -1,8 +1,6 @@
 import os.path
 import re
 import shutil
-import time
-from threading import Thread
 from typing import List, Dict, Iterable
 
 from PyQt6.QtCore import Qt
@@ -11,29 +9,38 @@ from PyQt6.QtWidgets import QVBoxLayout, QComboBox, QLabel, QHBoxLayout, QDialog
     QLineEdit, QFileDialog
 from music_tag import AudioFile
 
-from config import cfg
+from config import cfg, log
 from service.tagEditor import TAGS
 from service.converterTask import ConverterTask
-from service.qThreadTarget import QThreadTarget
 from gui.layout.treeView import TreeView
 from gui.layout.iconButton import IconButton
 from gui.layout.processWindow import ProcessWindow
+from gui.layout.saveWindow import SaveWindow
 from myTunes.service.converter import Converter, Encoder
 from myTunes.gui.layout.popup import ErrorBox
+from .coverLayout import CoverLayout
+from myTunes.model.settings import CoverSettings
+from myTunes.service.afileState import AfileState
 
-__all__ = ('SettingsLayout',)
+__all__ = ('MetadataLayout',)
 
 
-class SettingsLayout(QVBoxLayout):
-    def __init__(self, converter: Converter):
-        super(SettingsLayout, self).__init__()
+class MetadataLayout(QVBoxLayout):
+    def __init__(self, converter: Converter, coverLayout: CoverLayout, afileState: AfileState):
+        super(MetadataLayout, self).__init__()
         self._converter = converter
         self._parameterLayout: List[QHBoxLayout] = []
         self._parameters: List[QWidget] = []
         self._activeEncoder: Encoder = None
         self._treeView: TreeView = None
+        self._coverLayout = coverLayout
+        self._afileState = afileState
+
+        self._coverLayout.buttonSave.clicked.connect(self.save_afile_cover)
+
         self.processWindow = ProcessWindow(converter)
-        
+        self.saveWindow = SaveWindow(self._afileState)
+
         group = QHBoxLayout()
         
         self.buttonRename = QDialogButtonBox()
@@ -42,7 +49,7 @@ class SettingsLayout(QVBoxLayout):
         group.addWidget(self.buttonRename)
         
         self.buttonSave = QDialogButtonBox(QDialogButtonBox.StandardButton.Save)
-        self.buttonSave.accepted.connect(self.save_afile)
+        self.buttonSave.accepted.connect(self.save_afile_meta)
         group.addWidget(self.buttonSave)
 
         self.buttonStart = QDialogButtonBox()
@@ -95,30 +102,28 @@ class SettingsLayout(QVBoxLayout):
     def set_treeView(self, treeView: TreeView) -> None:
         self._treeView = treeView
 
-    def save_afile(self) -> None:
+    def _save_afile(self, coverMode: bool) -> None:
         afileId = self._treeView.tagsLayout.tags['afileId'].text()
-        if afileId != '':
-            afiles = [self._treeView.afiles[i] for i in self._treeView.selectedAfilesId]
-            fewFiles = len(afiles) > 1
-            
-            for afile in afiles:
-                for tag in TAGS:
-                    if fewFiles and not tag.multiTag:
-                        continue
+        if not afileId:
+            return
 
-                    val = self._treeView.tagsLayout.tags[tag.name].text()
-                    if val == '':
-                        if tag.name in afile:
-                            del afile[tag.name]
-                    else:
-                        val = afile.get(tag.name).type(val)
-                        afile[tag.name] = val
-                    
-                    afile.qTreeViewRow[tag.index].setText(str(val))
-                
-                if not self._treeView.tagsLayout.cover.isDefault:
-                    afile['artwork'] = self._treeView.tagsLayout.cover.img
-                afile.save()
+        afiles = [self._afileState.afiles[i] for i in self._afileState.selectedAfilesId]
+
+        self.enable_controls(False)
+        self.saveWindow.create_window()
+        if coverMode:
+            self.saveWindow.process_cover(afiles=afiles, treeView=self._treeView)
+        else:
+            self.saveWindow.process_meta(afiles=afiles, treeView=self._treeView)
+
+        self._coverLayout.jpegNext.setEnabled(False)
+        self.enable_controls(True)
+
+    def save_afile_meta(self) -> None:
+        self._save_afile(False)
+
+    def save_afile_cover(self) -> None:
+        self._save_afile(True)
 
     def _check_rename_mask(self, mask: str) -> List[str]:
         tags = [f'<{i.title.lower()}>' for i in TAGS]
@@ -139,61 +144,88 @@ class SettingsLayout(QVBoxLayout):
                     str(e)
                 ).exec()
             else:
+                row = -1
                 for i in self._treeView.selectedIndexes():
-                    self._rename_recursive(self._treeView.modelRow.itemFromIndex(i), match)
+                    if i.row() != row:
+                        self._rename_files(self._treeView.modelRow.itemFromIndex(i), match)
+                        row = i.row()
     
-    def _rename_recursive(self, item: QStandardItem, match: Iterable[str]) -> None:
-        childs = self._treeView.read_items(item)
-        if childs:
-            for child in childs:
-                if len(child) != 1:
-                    afileId = int(child[-1].text())
-                else:
-                    if child[0] is not None:
-                        self._rename_recursive(child[0], match)
-        else:
-            p = item.parent()
-            if not p: p = self._treeView.rootParent
-            
-            items = self._treeView.read_item_rows(p)
-            row = items[item.row()]
-            if row and row[-1] is not None:
-                afileId = int(row[-1].text())
-                afile = self._treeView.afiles[afileId]
-                
-                fileName = self.renameFilesMask.currentText().lower()
-                for tag in TAGS:
-                    for i in match:
-                        i = i.lower()
-                        if f'<{tag.title.lower()}>' == i:
-                            val = afile[tag.name].first
-                            if val is None:
-                                val = ''
-                            fileName = fileName.replace(i, str(val), -1)
-                
-                fileName = f'{fileName}{afile.filename[afile.filename.rfind("."):]}'
-                row[0].setText(fileName)
-                fileName = f'{os.path.dirname(afile.filename)}/{fileName}'
+    def _rename_files(self, item: QStandardItem, match: Iterable[str]) -> None:
+        rows = self._treeView.selectedRows
+        if not rows: return
+
+        for row in rows:
+            if row[self._treeView.afileIdHeaderIdx] is None:
+                continue
+
+            afileId = int(row[self._treeView.afileIdHeaderIdx].text())
+            afile = self._afileState.afiles[afileId]
+
+            fileName = self.renameFilesMask.currentText().lower()
+            for tag in TAGS:
+                for i in match:
+                    i = i.lower()
+                    if f'<{tag.title.lower()}>' == i:
+                        val = afile[tag.name].first
+                        if val is None:
+                            val = ''
+                        fileName = fileName.replace(i, str(val), -1)
+
+            fileName = f'{fileName}{afile.filename[afile.filename.rfind("."):]}'
+            fileName = f'{os.path.dirname(afile.filename)}/{fileName}'
+
+            try:
                 shutil.move(afile.filename, fileName)
+            except Exception as e:
+                log.error('rename file %s: %s' % (os.path.basename(afile.filename), e))
+            else:
+                log.info('rename file %s -> %s' % (os.path.basename(afile.filename), os.path.basename(fileName)))
                 metadata: AudioFile = self._treeView.tagEditor.load_file(fileName)
-                self._treeView.afiles[afileId] = metadata
+                metadata.qTreeViewRow = afile.qTreeViewRow
+                self._afileState.afiles[afileId] = metadata
+                row[0].setText(os.path.basename(fileName))
 
     def _take_tasks_recursive(self, item: QStandardItem, tasks: List[ConverterTask], path:str='') -> List[ConverterTask]:
-        childs = self._treeView.read_items(item)
-        if childs:
-            for child in childs:
-                if len(child) != 1:
-                    afileId = int(child[-1].text())
-                    ext = self._activeEncoder.settings.format
-                    
-                    tasks.append(ConverterTask(
-                        afile=self._treeView.afiles[afileId],
-                        qTreePath=path,
-                        ext=ext
-                    ))
-                else:
-                    if child[0] is not None:
-                        tasks = self._take_tasks_recursive(child[0], tasks, f'{path}/{child[0].text()}')
+        model = self._treeView.model()
+
+        if item == self._treeView.rootParent:
+            rows = []
+            for row in range(model.rowCount()):
+                rows.append(tuple(item.child(row, col) for col in range(model.columnCount())))
+        else:
+            rows = self._treeView.get_rows(item, maxLevel=1, onlyChilds=True)
+
+        for row in rows:
+            if row[0].hasChildren():
+                self._take_tasks_recursive(row[0], tasks, f'{path}/{row[0].text()}')
+                continue
+            elif row[model.columnCount() - 1] is not None:
+                afileId = int(row[-1].text())
+                ext = self._activeEncoder.settings.format
+                tasks.append(ConverterTask(
+                    afile=self._afileState.afiles[afileId],
+                    qTreePath=path,
+                    ext=ext
+                ))
+        # else:
+            # if child[0] is not None:
+
+
+        # childs = self._treeView.get_item_childs(item)
+        # if childs:
+        #     for child in childs:
+        #         if len(child) != 1:
+        #             afileId = int(child[-1].text())
+        #             ext = self._activeEncoder.settings.format
+        #
+        #             tasks.append(ConverterTask(
+        #                 afile=self._afileState.afiles[afileId],
+        #                 qTreePath=path,
+        #                 ext=ext
+        #             ))
+        #         else:
+        #             if child[0] is not None:
+        #                 tasks = self._take_tasks_recursive(child[0], tasks, f'{path}/{child[0].text()}')
         return tasks
 
     def set_output_folder(self) -> None:
@@ -204,10 +236,15 @@ class SettingsLayout(QVBoxLayout):
     def start(self) -> None:
         paramMap = self._activeEncoder.settings.guiSettings
         settings: Dict[str, any] = {}
+        # coverSettings = CoverSettings(
+        #     jpegNext=self._coverLayout.jpegNext.isChecked(),
+        #     quality=int(self._coverLayout.quality.currentText())
+        # )
 
         # update exe settings
         self._converter.ffmpeg.exe = cfg.ffmpeg
         self._converter.qaac.exe = cfg.qaac
+        # self._converter.coverSettings = coverSettings
 
         for param in self._parameters:
             if isinstance(param, QCheckBox):
@@ -239,15 +276,10 @@ class SettingsLayout(QVBoxLayout):
             self.enable_controls(False)
             print('encoder setting updated')
             tasks = self._take_tasks_recursive(self._treeView.rootParent, [])
+            self.enable_controls(False)
             self.processWindow.create_window()
-            # QThreadTarget not work correctly in pyinstaller. look https://groups.google.com/g/python_inside_maya/c/D78HV6jDdwk?pli=1
-            Thread(target=self.processWindow.process, args=(tasks, self.outputFolder.text(),)).start()
-            Thread(target=self.wait_processing).start()
-
-    def wait_processing(self):
-        while not self.processWindow.allDone:
-            time.sleep(.5)
-        self.enable_controls(True)
+            self.processWindow.process(tasks, self.outputFolder.text())
+            self.enable_controls(True)
 
     def enable_controls(self, on:bool):
         self.buttonStart.setEnabled(on)

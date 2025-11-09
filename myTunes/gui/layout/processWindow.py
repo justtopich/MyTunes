@@ -3,14 +3,13 @@ from queue import Queue
 from typing import List, Dict, Tuple
 
 from PyQt6.QtCore import Qt, QThread
-from PyQt6.QtGui import QPalette
 from PyQt6.QtWidgets import QWidget, QHBoxLayout, QDialogButtonBox, QVBoxLayout, QLabel, \
-    QListWidget, QProgressBar, QScrollBar, QScrollArea, QListWidgetItem
+    QListWidget, QProgressBar, QScrollBar, QScrollArea, QApplication
 
 from config import log, cfg
 from service.converter import Converter
 from service.converterTask import ConverterTask
-from service.handler import Hanlder
+from service.handler import Handler
 
 
 class ProcessWindow(QWidget):
@@ -43,7 +42,7 @@ class ProcessWindow(QWidget):
         
         self.buttonStop = QDialogButtonBox()
         self.buttonStop.addButton('Stop', QDialogButtonBox.ButtonRole.AcceptRole)
-        self.buttonStop.clicked.connect(self.break_convert_files)
+        self.buttonStop.clicked.connect(self.break_process)
         group.addWidget(self.buttonStop)
         layout.addLayout(group)
         
@@ -52,12 +51,10 @@ class ProcessWindow(QWidget):
         self.converter = converter
         self.queue: Queue[ConverterTask | str] = Queue()
         self.handlers: Dict[int, QThread] = {}
-        self.progressBar: Dict[int, QProgressBar] = {}
-        self.progressName: Dict[int, QLabel] = {}
         self.replaceOutfile = True
         self.allDone = True
     
-    def break_convert_files(self):
+    def break_process(self):
         self.buttonStop.setEnabled(False)
         
         n = 0
@@ -81,8 +78,13 @@ class ProcessWindow(QWidget):
     
     def create_window(self):
         self.logPage.clear()
-        for i in self.progressBar.values(): i.deleteLater()
-        for i in self.progressName.values(): i.deleteLater()
+        for i in self.progressBar.values():
+            i.hide()
+            i.deleteLater()
+        for i in self.progressName.values():
+            i.hide()
+            i.deleteLater()
+
         self.progressBar.clear()
         self.progressName.clear()
         
@@ -106,7 +108,7 @@ class ProcessWindow(QWidget):
             outPath += '/'
         
         for i in range(cfg.threads):
-            th = Hanlder(i, self.queue, self.progressName[i], self.logPage, self.converter,
+            th = Handler(i, self.queue, self.progressName[i], self.logPage, self.converter,
                          outPath, self.replaceOutfile)
             th.setProgress.connect(self.set_progress)
             self.handlers[i] = th
@@ -119,7 +121,8 @@ class ProcessWindow(QWidget):
             self.queue.put('--stop--')
         
         while not self.queue.empty():
-            time.sleep(1)
+            QApplication.processEvents()
+            time.sleep(.1)
             
         self.queue.join()
         self.allDone = True

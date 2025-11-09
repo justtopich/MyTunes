@@ -1,8 +1,10 @@
-[tool.poetry]
+[project]
 name = "myTunes"
-version = "0.1.0"
+version = "0.2.2"
 description = "Synс & convert music library with directories"
-authors = ["Alex Whiteeyes <justtopich@gmail.com>"]
+authors = [
+    {name = "Alex Whiteeyes", email = "justtopich@gmail.com"}
+]
 readme = "README.md"
 
 [tool.poetry.dependencies]
@@ -13,7 +15,7 @@ music-tag = "^0.4.3"
 pytest = { version = "^8.3.5", optional = true }
 pydantic-settings = "^2.8.1"
 pyqt6 = "^6.8.1"
-pillow = "^11.1.0"
+pillow = "^11.3.0"
 
 [tool.poetry.group.pyinstaller]
 optional = true

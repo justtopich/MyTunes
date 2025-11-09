@@ -170,10 +170,14 @@ class FFmpeg(Encoder):
                 if not line:
                     break
                 elif line.startswith('Duration: '):
-                    try:
-                        duration = self._parse_duration(line[10:line.find('.')])
-                    except Exception as e:
-                        raise Exception(f'parse ffmpeg track duration [{line}]: {e}')
+                    if line[10:].startswith('N/A'):
+                        duration = float('inf')
+                        log.warning(f'N/A duration of {fileIn}')
+                    else:
+                        try:
+                            duration = self._parse_duration(line[10:line.find('.')])
+                        except Exception as e:
+                            raise Exception(f'Parse ffmpeg track duration [{line}]: {e}')
         
         assert duration > 0, f'file with zero duration: {fileIn}'
         
@@ -197,8 +201,8 @@ class FFmpeg(Encoder):
                     if line.startswith('out_time='):
                         duration2 = self._parse_duration(line[9:line.find('.')])
                     elif line.startswith('progress='):
-                        if line.endswith('end'):
-                            done = 100
+                        if line[9:].startswith('end'):
+                            yield 100
                             break
                     elif 'Error' in line:
                         log.error(f'{line}')

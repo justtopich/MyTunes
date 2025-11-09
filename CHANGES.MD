@@ -1,6 +1,35 @@
 # Changelog
 
+## 2.2.0-beta
+
+This update improves working with covers - now it is have a separate settings and saving. 
+
+
+
+### Fixed
+
+* remove track from tracks will delete all lower tracks
+* fail to convert file when trying to create output folder if it exists
+* crashed when remove root item if it is a folder with a few nested items
+* tracks space not show info in columns: bitrate, samplerate
+* fail to convert few files with a same names
+* fail to convert file if his duration is unknown (ffmpeg not show) 
+
+### Improvements
+
+* add splitter between file chooser and tracks viewer
+* show info about image when mouse hover the cover
+* select folder will select all nested items
+* add splitter between files, tracks and metadata spaces. Now can change size each of them.
+* add new columns to the tracks space: codec and cover types
+
+## Features
+* cover saving options.
+* show image info when hover a cover
+* support webp format for cover
+
 ## 2.1.0-beta
+
 ### Fixed
 * calling ffmpeg with external console
 

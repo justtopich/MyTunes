@@ -5,13 +5,13 @@ from PyQt6.QtWidgets import QGroupBox, QTreeView, QListView, QHBoxLayout, QSpace
 
 class FileBrowser(QGroupBox):
     def __init__(self):
-        super(FileBrowser, self).__init__('Choose files')
+        super(FileBrowser, self).__init__('Files')
         self.treeview = QTreeView()
         self.listview = QListView()
         # self.treeview.setHeaderHidden(True)
         # self.setAcceptDrops(True)
 
-        self.setMinimumHeight(200)
+        self.setMinimumHeight(100)
 
         fileChooser = QHBoxLayout()
         fileChooser.addWidget(self.treeview, stretch=1)

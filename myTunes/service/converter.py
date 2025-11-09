@@ -3,6 +3,7 @@ import traceback
 from queue import Queue
 from threading import Thread
 from typing import Dict, Iterator
+from uuid import uuid4
 
 from .encoder import Encoder
 from .qaac import Qaac
@@ -30,7 +31,7 @@ class Converter:
         # self.task: Dict[int, ibt=] = {}
         self.encoder: Encoder = self.ffmpeg
         self.outPath = ''
-    
+
     def convert_afile(self, afile: AudioFile, fileOut: str) -> Iterator[int]:
         for i in self.convert_file(afile.filename, fileOut):
             yield i
@@ -57,8 +58,7 @@ class Converter:
         
         if self.encoder.needWav:
             # 30% reserved for this.
-            tmpName = os.path.basename(fileIn)
-            tmpName = f"{cfg.tempPath}/{tmpName[:tmpName.rfind('.')]}.wav"
+            tmpName = f"{cfg.tempPath}/{uuid4()}.wav"
             stepFactor = 0.7
             
             try:
