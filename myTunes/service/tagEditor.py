@@ -2,13 +2,13 @@ from typing import Iterable
 import traceback
 import re
 
+from mutagen.mp4 import MP4Cover
 import music_tag
 from music_tag.file import AudioFile, MetadataItem, Artwork, TAG_MAP_ENTRY
-from mutagen.mp4 import MP4Cover
+
 from myTunes.config import log
-from .util import parse_date, convert_to_jpeg
+from .util import parse_date
 from myTunes.model.settings import CoverSettings
-from .afileState import AfileState, Acover
 
 
 __all__ = ('Tag', 'TAGS', 'TagEditor', 'AudioFile')

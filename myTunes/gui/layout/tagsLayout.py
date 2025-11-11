@@ -47,7 +47,6 @@ class TagsLayout(QGridLayout):
             with open(acover.path, 'rb') as f:
                 cover = f.read()
         else:
-
             try:
                 cover = get_afile_img(afile)
             except Exception as e:
@@ -59,6 +58,8 @@ class TagsLayout(QGridLayout):
             self.coverLayout.cover.set_image(cover, afileId)
         except Exception as e:
             log.error('show cover: %s' % e)
+
+        self.coverLayout.buttonSave.setEnabled(not self.coverLayout.cover.isDefault)
 
     def update_state(self, afiles: List[AudioFile] = None, afilesId: List[int] = None) -> None:
         if not afiles:

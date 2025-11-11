@@ -1,10 +1,16 @@
 # Changelog
 
+## 2.2.1-beta
+
+### Fixed
+
+* crash if save cover for tracks in folder and cover have only one track
+* button save cover can be enabled for track without cover
+
+
 ## 2.2.0-beta
 
-This update improves working with covers - now it is have a separate settings and saving. 
-
-
+This update improves working with covers - now it is a separate settings and saving. 
 
 ### Fixed
 
@@ -23,10 +29,14 @@ This update improves working with covers - now it is have a separate settings an
 * add splitter between files, tracks and metadata spaces. Now can change size each of them.
 * add new columns to the tracks space: codec and cover types
 
-## Features
+### Features
 * cover saving options.
+
 * show image info when hover a cover
+
 * support webp format for cover
+
+  
 
 ## 2.1.0-beta
 

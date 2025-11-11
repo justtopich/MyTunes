@@ -111,11 +111,7 @@ class MetadataLayout(QVBoxLayout):
 
         self.enable_controls(False)
         self.saveWindow.create_window()
-        if coverMode:
-            self.saveWindow.process_cover(afiles=afiles, treeView=self._treeView)
-        else:
-            self.saveWindow.process_meta(afiles=afiles, treeView=self._treeView)
-
+        self.saveWindow.process(afiles=afiles, treeView=self._treeView, coverMode=coverMode)
         self._coverLayout.jpegNext.setEnabled(False)
         self.enable_controls(True)
 
@@ -207,25 +203,6 @@ class MetadataLayout(QVBoxLayout):
                     qTreePath=path,
                     ext=ext
                 ))
-        # else:
-            # if child[0] is not None:
-
-
-        # childs = self._treeView.get_item_childs(item)
-        # if childs:
-        #     for child in childs:
-        #         if len(child) != 1:
-        #             afileId = int(child[-1].text())
-        #             ext = self._activeEncoder.settings.format
-        #
-        #             tasks.append(ConverterTask(
-        #                 afile=self._afileState.afiles[afileId],
-        #                 qTreePath=path,
-        #                 ext=ext
-        #             ))
-        #         else:
-        #             if child[0] is not None:
-        #                 tasks = self._take_tasks_recursive(child[0], tasks, f'{path}/{child[0].text()}')
         return tasks
 
     def set_output_folder(self) -> None:

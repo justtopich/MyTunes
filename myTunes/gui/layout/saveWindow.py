@@ -1,14 +1,15 @@
 import os.path
 import time
-from typing import Tuple, Dict, List
+from typing import List, Generator, Any
 
 from PyQt6.QtCore import Qt
-from music_tag import AudioFile
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QProgressBar, QDialogButtonBox, QListWidget, QScrollBar, QApplication
-from service.util import convert_to_jpeg, ImageInfo
+from music_tag import AudioFile
+
+from service.util import convert_to_jpeg, ImageInfo, get_afile_img
+from service.afileState import AfileState, Acover
 from service.tagEditor import TAGS
 from config import log
-from myTunes.service.afileState import AfileState, Acover
 
 
 class SaveWindow(QWidget):
@@ -31,8 +32,6 @@ class SaveWindow(QWidget):
         self.buttonStop = QDialogButtonBox()
         self.buttonStop.addButton('Stop', QDialogButtonBox.ButtonRole.AcceptRole)
         self.buttonStop.clicked.connect(self.break_process)
-        # group.addWidget(self.buttonStop)
-        # layout.addLayout(group)
         layout.addWidget(self.buttonStop)
 
         self.logPage = QListWidget()
@@ -55,62 +54,72 @@ class SaveWindow(QWidget):
         log.info(msg)
         self.logPage.insertItem(0, msg)
 
+    def _process_cover(self, afiles: List[AudioFile], treeView: 'MetadataLayout') -> Generator[
+        AudioFile, AudioFile, None]:
+        acoverMaster: Acover = self._afileState.acovers[int(afiles[0].qTreeViewRow[-1].text())]
 
-    def process_cover(self, afiles: List[AudioFile], treeView: 'MetadataLayout') -> None:
-        self._process(afiles, treeView, coverMode=True)
+        if acoverMaster.path:
+            with open(acoverMaster.path, mode='rb') as f:
+                img = f.read()
+            QApplication.processEvents()
+        else:
+            img = get_afile_img(afiles[0])
 
-    def process_meta(self, afiles: List[AudioFile], treeView: 'MetadataLayout') -> None:
-        self._process(afiles, treeView, coverMode=False)
+        if not img:
+            return
 
-    def _process(self, afiles: List[AudioFile], treeView: 'MetadataLayout', coverMode=False) -> None:
+        if acoverMaster.quality < 100:
+            log.info('convert to jpeg with quality %s' % (acoverMaster.quality))
+            img = convert_to_jpeg(img, progressive=acoverMaster.jpegNext, quality=acoverMaster.quality)
+            QApplication.processEvents()
+
+        for n, afile in enumerate(afiles):
+            if self.stop:
+                break
+
+            afileId = int(afile.qTreeViewRow[-1].text())
+            self._afileState.acovers[afileId].saved = True
+            self._afileState.acovers[afileId].path = None
+            afile['artwork'] = img
+            afile.qTreeViewRow[19].setText(ImageInfo(afile['artwork'].first.data).format)
+            yield afile
+
+    def _process_meta(self, afiles: List[AudioFile], treeView: 'MetadataLayout') -> Generator[AudioFile, Any, None]:
+        fewFiles = len(afiles) > 1
+        for n, afile in enumerate(afiles):
+            if self.stop:
+                break
+
+            for tag in TAGS:
+                QApplication.processEvents()
+
+                if fewFiles and not tag.multiTag:
+                    continue
+
+                val = treeView.tagsLayout.tags[tag.name].text()
+                if val == '':
+                    if tag.name in afile:
+                        del afile[tag.name]
+                else:
+                    val = afile.get(tag.name).type(val)
+                    afile[tag.name] = val
+
+                afile.qTreeViewRow[tag.index].setText(str(val))
+
+            yield afile
+
+    def process(self, afiles: List[AudioFile], treeView: 'MetadataLayout', coverMode=False) -> None:
         self.buttonStop.setEnabled(True)
         self.allDone = False
         self.stop = False
         self.logPage.clear()
 
-        fewFiles = len(afiles) > 1
-        for n, afile in enumerate(afiles):
-            afileId = int(afile.qTreeViewRow[-1].text())
-            if self.stop:
-                break
+        if coverMode:
+            processor = self._process_cover
+        else:
+            processor = self._process_meta
 
-            if not coverMode:
-                for tag in TAGS:
-                    QApplication.processEvents()
-
-                    if fewFiles and not tag.multiTag:
-                        continue
-
-                    val = treeView.tagsLayout.tags[tag.name].text()
-                    if val == '':
-                        if tag.name in afile:
-                            del afile[tag.name]
-                    else:
-                        val = afile.get(tag.name).type(val)
-                        afile[tag.name] = val
-
-                    afile.qTreeViewRow[tag.index].setText(str(val))
-            else:
-                acover =  self._afileState.acovers[int(afileId)]
-                if acover.path:
-                    with open(acover.path, mode='rb') as f:
-                         afile['artwork'] = f.read()
-
-                QApplication.processEvents()
-                if acover.quality < 100:
-                    log.info('convert to jpeg with quality %s' % (acover.quality))
-                    afile['artwork'] = convert_to_jpeg(
-                                afile['artwork'].first.data,
-                                progressive=acover.jpegNext,
-                                quality=acover.quality)
-
-                acover.saved = True
-                afile.qTreeViewRow[19].setText(ImageInfo(afile['artwork'].first.data).format)
-
-            # if not self._treeView.tagsLayout.coverLayout.cover.isDefault:
-                # afile['artwork'] = self._treeView.tagsLayout.coverLayout.cover.img
-
-            QApplication.processEvents()
+        for n, afile in enumerate(processor(afiles, treeView)):
             filename = os.path.basename(afile.filename)
 
             try:
@@ -122,7 +131,7 @@ class SaveWindow(QWidget):
                 log.debug('save %s' % filename)
                 self.logPage.insertItem(0, f'save: {filename}')
 
-            self.progressBar.setValue(int(100/len(afiles)*n))
+            self.progressBar.setValue(int(100 / len(afiles) * n))
             QApplication.processEvents()
             time.sleep(.1)
 

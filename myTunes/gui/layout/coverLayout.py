@@ -1,7 +1,6 @@
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QGuiApplication
-from PyQt6.QtWidgets import QHBoxLayout, QLabel, QCheckBox, QComboBox, QVBoxLayout, QWidget, QSizePolicy, \
-    QDialogButtonBox
+from PyQt6.QtWidgets import QHBoxLayout, QLabel, QCheckBox, QComboBox, QVBoxLayout, QWidget, QDialogButtonBox
 
 from .imageLabel import ImageLabel
 from myTunes.service.afileState import AfileState
@@ -73,6 +72,7 @@ class CoverLayout(QWidget):
                 self.afileState.selectedAfilesId
             )
         )
+        self.buttonSave.setEnabled(not self.cover.isDefault)
 
     def on_change_quality(self, text):
         self._log_state()
@@ -81,7 +81,6 @@ class CoverLayout(QWidget):
             self.afileState.acovers[i].quality = int(text)
 
         self.jpegNext.setEnabled(text != '100')
-
 
     def show_state(self, s):
         print(s == Qt.CheckState.Checked.value)

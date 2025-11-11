@@ -6,7 +6,7 @@ from typing import Dict, List, Tuple, Set
 
 from PyQt6.QtCore import QItemSelectionModel, Qt, QPoint, QItemSelection, QModelIndex
 from PyQt6.QtGui import QStandardItemModel, QStandardItem, QDropEvent, QDragMoveEvent, QDragEnterEvent, QColor
-from PyQt6.QtWidgets import QTreeView, QMenu, QAbstractItemView, QTableView
+from PyQt6.QtWidgets import QTreeView, QMenu, QAbstractItemView
 
 from config import log, KNOWN_FORMAT
 from service.tagEditor import TagEditor, AudioFile, TAGS, Tag
