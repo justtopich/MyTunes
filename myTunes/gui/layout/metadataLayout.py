@@ -22,6 +22,7 @@ from .coverLayout import CoverLayout
 from myTunes.model.settings import CoverSettings
 from myTunes.service.afileState import AfileState
 
+
 __all__ = ('MetadataLayout',)
 
 
@@ -277,6 +278,16 @@ class MetadataLayout(QVBoxLayout):
 
     def update_encoder(self, index:int) -> None:
         encoder = self._converter.encoderName[self.encoder.itemText(index)]
+
+        if not encoder:
+            ErrorBox(
+                self.encoder.itemText(index),
+                'Encoder not found',
+                'Check encoder settings'
+            ).exec()
+            self.buttonStart.setEnabled(False)
+            return
+
         print('set encoder', encoder.name)
 
         if encoder.name == 'QAAC':
@@ -316,3 +327,5 @@ class MetadataLayout(QVBoxLayout):
             self.addLayout(group)
             self._parameterLayout.append(group)
             self._parameters.append(param)
+
+        self.buttonStart.setEnabled(True)

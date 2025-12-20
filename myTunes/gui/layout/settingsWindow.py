@@ -7,11 +7,13 @@ from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QDialogButtonBox,
 
 from gui.layout.iconButton import IconButton
 from config import cfg
+from gui.layout.popup import InfoBox
 
 
 class SettingsWindow(QWidget):
     def __init__(self):
         super().__init__()
+
         self.setWindowTitle('Settings')
         layout = QVBoxLayout()
         self.setLayout(layout)
@@ -81,8 +83,24 @@ class SettingsWindow(QWidget):
             self.qaacFolder.setText(file[0].toLocalFile())
 
     def save(self):
+        changed = False
+
+        if self.ffmpegFolder.text() != cfg.ffmpeg:
+            changed = True
+
+        if self.qaacFolder.text() != cfg.qaac:
+            changed = True
+
         cfg.qaac = self.qaacFolder.text()
         cfg.ffmpeg = self.ffmpegFolder.text()
         cfg.threads = int(self.cpuThreads.currentText())
         cfg.save()
+
+        if changed:
+            InfoBox(
+                'Save changes',
+                'To apply new settings restart application',
+                ''
+            ).exec()
+
         self.close()

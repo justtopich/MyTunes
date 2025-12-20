@@ -1,15 +1,12 @@
 import sys
-from os import abort
-from typing import List, Dict
 
-from PyQt6.QtCore import QDir, Qt
+from PyQt6.QtCore import Qt
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
-from music_tag import AudioFile
 
 from myTunes.service.converter import Converter
 from myTunes.gui.layout import TagsLayout, MetadataLayout, CoverLayout, FileBrowser
-from myTunes.gui.layout.treeView import TreeView
+from myTunes.gui.layout.treeView import TreeView, COLUMNS, COLUMNS_HIDE
 from myTunes.gui.layout.popup import InfoBox
 from myTunes import __version__
 from myTunes.service.afileState import AfileState
@@ -65,7 +62,7 @@ class MainWindow(QMainWindow):
         # Second group box
         self.treeView = TreeView(self.afileState)
 
-        group2 = QGroupBox("Tracks")
+        group2 = QGroupBox()
         group2Box = QVBoxLayout()
         group2Box.addWidget(self.treeView)
         group2.setLayout(group2Box)
@@ -91,12 +88,22 @@ class MainWindow(QMainWindow):
                     f'Github: https://github.com/justtopich/MyTunes\n\n'
                     f'version: {__version__}')
 
+    def create_columns_menu(self, editMenu: QMenuBar):
+        self.columnsMenu = QMenu("&Columns", self)
+        editMenu.addMenu(self.columnsMenu)
+        for column in COLUMNS:
+            action = QAction(column, self)
+            action.setCheckable(not column in COLUMNS_HIDE)
+            self.columnsMenu.addAction(action)
+            # self.columnActions.append(action)
+
     def create_menu_bar(self):
         menuBar = self.menuBar()
         editMenu = menuBar.addMenu("&Edit")
         self.settingsAction = QAction("&Settings", self)
         editMenu.addAction(self.settingsAction)
         self.settingsAction.triggered.connect(self.show_settings)
+        self.create_columns_menu(editMenu)
 
         helpMenu = menuBar.addMenu("&Help")
         self.aboutAction = QAction("&About", self)
@@ -113,7 +120,7 @@ class MainWindow(QMainWindow):
         self.aboutWidget.show()
 
     def create_control(self, converter: Converter, treeView: TreeView) -> QGroupBox:
-        groupBox = QGroupBox('Metadata')
+        groupBox = QGroupBox()
         control = QHBoxLayout()
         groupBox.adjustSize()
         # control.addStretch()

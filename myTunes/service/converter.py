@@ -15,13 +15,21 @@ from myTunes.service.tagEditor import TagEditor, AudioFile
 
 class Converter:
     def __init__(self):
+        self.ffmpeg: FFmpeg = None
+        self.qaac: Qaac = None
+
         try:
             self.qaac = Qaac()
         except Exception as e:
-            raise ImportError(f'load QAAC encoder: {e}')
-        
+            log.error(f'load QAAC encoder: {e}')
+
+        try:
+            self.ffmpeg = FFmpeg()
+        except Exception as e:
+            log.error(f'load FFmpeg encoder: {e}')
+
         self.tagEditor = TagEditor()
-        self.ffmpeg = FFmpeg()
+
         self.encoderName: Dict[str, Encoder] = {
             'QAAC': self.qaac,
             'FFmpeg': self.ffmpeg

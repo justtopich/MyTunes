@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import QGroupBox, QTreeView, QListView, QHBoxLayout, QSpace
 
 class FileBrowser(QGroupBox):
     def __init__(self):
-        super(FileBrowser, self).__init__('Files')
+        super(FileBrowser, self).__init__()
         self.treeview = QTreeView()
         self.listview = QListView()
         # self.treeview.setHeaderHidden(True)
